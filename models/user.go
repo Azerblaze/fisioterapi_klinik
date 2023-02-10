@@ -13,7 +13,7 @@ type User struct {
 	Address  string `json:"address" form:"address"`
 	Role     int    `json:"role" form:"role"`
 	Status   bool   `json:"status" form:"status"`
-	Level    int    `json:"level" form:"level"`
+	IsAdmin  bool   `json:"isAdmin" form:"isAdmin"`
 }
 
 func (User) TableName() string {
