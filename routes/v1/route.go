@@ -52,6 +52,9 @@ func InitRoute(payload *routes.Payload) (*echo.Echo, io.Closer) {
 	api := e.Group("/api")
 	v1 := api.Group("/v1")
 
+	auth := v1.Group("/auth")
+	auth.POST("/register", uHandler.Register)
+
 	//endpoints users
 	users := v1.Group("/users")
 	users.GET("", uHandler.GetProfile, middleware.JWT([]byte(configs.Cfg.TokenSecret)))
