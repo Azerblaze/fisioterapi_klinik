@@ -27,3 +27,12 @@ func (db DBGorm) GetUserById(userId int) (models.User, error) {
 	}
 	return user, nil
 }
+
+func (db DBGorm) GetUserByEmail(email string) (models.User, error) {
+	var user models.User
+	err := db.DB.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}

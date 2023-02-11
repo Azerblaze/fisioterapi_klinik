@@ -30,7 +30,7 @@ func (h *UserHandler) Register(c echo.Context) error {
 	}
 
 	//register
-	result, err := h.IUserServices.Register(user)
+	err := h.IUserServices.Register(user)
 	if err != nil {
 		return err
 	}
