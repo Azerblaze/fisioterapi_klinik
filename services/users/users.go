@@ -3,9 +3,9 @@ package users
 import (
 	"errors"
 	"net/http"
+	"projek_fisioterapi/helper"
 	"projek_fisioterapi/models"
 	"projek_fisioterapi/repositories"
-	"projek_fisioterapi/helper"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -32,12 +32,30 @@ func (s *userServices) Register(request models.User) error {
 	if errors.Is(errCheckEmail, gorm.ErrRecordNotFound) {
 		user.Name = request.Name
 		user.Email = request.Email
-		user.Password = 
-	} else if errCheckEmail != nil {
+		//hash password
+		hashedPassword, errHashPassword := helper.HashPassword(request.Password)
+		if errHashPassword != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, errHashPassword.Error())
+		}
+		user.Password = hashedPassword
+		user.Phone = request.Phone
+		user.Address = request.Address
+		user.Role = request.Role
+		user.Status = true
+		user.IsAdmin = false
+
+		//save user
+		errSaveNewUser := s.IUserRepository.SaveNewUser(user)
+		if errSaveNewUser != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, errSaveNewUser.Error())
+		}
+	} else if errCheckEmail != nil { //error other than not found
 		return echo.NewHTTPError(http.StatusInternalServerError, errCheckEmail.Error())
-	} else {
+	} else { //email has been taken
 		return echo.NewHTTPError(http.StatusConflict, "Email has been taken")
 	}
+
+	return nil
 }
 
 func (s *userServices) GetProfile(id int) (models.User, error) {
