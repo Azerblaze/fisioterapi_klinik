@@ -17,6 +17,14 @@ func NewGorm(db *gorm.DB) repositories.IUserRepository {
 	}
 }
 
+func (db DBGorm) SaveNewUser(user models.User) error {
+	result := db.DB.Create(user)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
 func (db DBGorm) GetUserById(userId int) (models.User, error) {
 	var user models.User
 	err := db.DB.
