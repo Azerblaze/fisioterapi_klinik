@@ -2,6 +2,7 @@ package users
 
 import (
 	"net/http"
+	"projek_fisioterapi/dto"
 	"projek_fisioterapi/models"
 	"projek_fisioterapi/services/users"
 
@@ -37,6 +38,32 @@ func (h *UserHandler) Register(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "User created",
+	})
+}
+
+func (h *UserHandler) Login(c echo.Context) error {
+	var login dto.Login
+	errBind := c.Bind(&login)
+	if errBind != nil {
+		return errBind
+	}
+
+	//validasi
+	validate := validator.New()
+	errValidate := validate.Struct(login)
+	if errValidate != nil {
+		return errValidate
+	}
+
+	//login
+	token, err := h.IUserServices.Login(login)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Login successful",
+		"token":   token,
 	})
 }
 
