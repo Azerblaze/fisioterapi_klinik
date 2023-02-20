@@ -3,7 +3,9 @@ package users
 import (
 	"errors"
 	"net/http"
+	"projek_fisioterapi/dto"
 	"projek_fisioterapi/helper"
+	mid "projek_fisioterapi/middleware"
 	"projek_fisioterapi/models"
 	"projek_fisioterapi/repositories"
 
@@ -16,8 +18,9 @@ func NewUserServices(userRepo repositories.IUserRepository) IUserServices {
 }
 
 type IUserServices interface {
-	GetProfile(id int) (models.User, error)
 	Register(user models.User) error
+	Login(login dto.Login) (string, error)
+	GetProfile(id int) (models.User, error)
 }
 
 type userServices struct {
@@ -56,6 +59,33 @@ func (s *userServices) Register(request models.User) error {
 	}
 
 	return nil
+}
+
+func (s *userServices) Login(login dto.Login) (string, error) {
+	var user models.User
+
+	//check if email is exist
+	user, errCheckEmail := s.IUserRepository.GetUserByEmail(login.Email)
+	if errors.Is(errCheckEmail, gorm.ErrRecordNotFound) {
+		return "", echo.NewHTTPError(http.StatusForbidden, "Email or Password are incorrect")
+	} else if errCheckEmail != nil {
+		return "", echo.NewHTTPError(http.StatusInternalServerError, errCheckEmail.Error())
+	}
+
+	//check password
+	var token string
+	var errToken error
+	valid := helper.CheckPasswordHash(login.Password, user.Password)
+	if valid {
+		token, errToken = mid.GetToken(user.ID, user.Name, user.Role, user.IsAdmin)
+		if errToken != nil {
+			return "", echo.NewHTTPError(http.StatusInternalServerError, errToken.Error())
+		}
+	} else {
+		return "", echo.NewHTTPError(http.StatusForbidden, "Email or Password are incorrect")
+	}
+
+	return token, nil
 }
 
 func (s *userServices) GetProfile(id int) (models.User, error) {
